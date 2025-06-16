@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Video Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 40px auto;
+            background: rgba(15, 23, 42, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(101, 119, 255, 0.2);
+        }
+        
+        header {
+            background: rgba(20, 30, 48, 0.9);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(101, 119, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(145, 71, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #8a2be2, #6441a5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .subtitle {
+            color: #a0aec0;
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .input-section {
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.7);
+            border-bottom: 1px solid rgba(101, 119, 255, 0.2);
+        }
+        
+        .area-input {
+            display: flex;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        
+        .input-left {
+            flex: 1;
+            display: flex;
+            background: rgba(26, 32, 44, 0.8);
+            border-radius: 15px;
+            border: 2px solid #4a5568;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .input-left > div {
+            padding: 15px;
+        }
+        
+        .input-left > div:first-child {
+            flex: 1;
+        }
+        
+        .input-left input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        
+        .input-left input::placeholder {
+            color: #718096;
+        }
+        
+        .mobile-hide {
+            display: inline;
+        }
+        
+        .btn-download {
+            background: linear-gradient(135deg, #6441a5, #8a2be2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 0 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 5px 15px rgba(100, 65, 165, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-download::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn-download:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(100, 65, 165, 0.6);
+        }
+        
+        .btn-download:hover::before {
+            left: 100%;
+        }
+        
+        .content-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .iframe-container {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(101, 119, 255, 0.2);
+        }
+        
+        .iframe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .iframe-title {
+            font-size: 1.5rem;
+            color: #8a2be2;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .info-box {
+            background: rgba(26, 32, 44, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            line-height: 1.6;
+            border-left: 4px solid #6441a5;
+            margin-bottom: 25px;
+        }
+        
+        .info-box i {
+            color: #8a2be2;
+            margin-right: 10px;
+        }
+        
+        #previewFrame {
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .instructions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+            padding: 0 30px;
+        }
+        
+        .step {
+            background: rgba(26, 32, 44, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(101, 119, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateY(-5px);
+            border-color: #6441a5;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #6441a5, #8a2be2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #d6bcfa;
+        }
+        
+        .examples {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(101, 119, 255, 0.2);
+            padding: 0 30px 30px;
+        }
+        
+        .examples h3 {
+            margin-bottom: 20px;
+            color: #a0aec0;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+        
+        .example-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .example {
+            background: rgba(26, 32, 44, 0.9);
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #4a5568;
+        }
+        
+        .example:hover {
+            background: rgba(64, 61, 107, 0.5);
+            border-color: #8a2be2;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.9);
+            margin-top: 30px;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid rgba(101, 119, 255, 0.2);
+        }
+        
+        .disclaimer {
+            background: rgba(200, 60, 60, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #ff4d4d;
+        }
+        
+        @media (max-width: 768px) {
+            .area-input {
+                flex-direction: column;
+            }
+            
+            .btn-download {
+                padding: 18px;
+                justify-content: center;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .mobile-hide {
+                display: none;
+            }
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loader .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-top: 6px solid #8a2be2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            display: none;
+            background: rgba(200, 60, 60, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #ff4d4d;
+            color: #ff9e9e;
+        }
+        
+        .glow {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px -5px #8a2be2;
+            }
+            to {
+                box-shadow: 0 0 20px 5px #8a2be2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container glow">
+        <header>
+            <h1><i class="fab fa-twitch"></i> Twitch Video Downloader</h1>
+            <p class="subtitle">Download any Twitch video or clip instantly. Paste your link and access download options through our integrated interface.</p>
+        </header>
+        
+        <div class="input-section">
+            <div class="area-input" id="input-area">
+                <div class="input-left">
+                    <div style="flex: 1">
+                        <input id="input" type="text" placeholder="Paste or enter a clip or video URL from twitch.tv">
+                    </div>
+                    <div>
+                        <span onclick="pasteContent()"><i class="fas fa-paste"></i> <span class="mobile-hide">Paste</span></span>
+                    </div>
+                </div>
+                <button id="btn-download" class="btn-download" onclick="clickDownload()">Download</button>
+            </div>
+            <div class="error-message" id="errorMessage">
+                Please enter a valid Twitch video URL (e.g., https://www.twitch.tv/videos/1234567890 or https://www.twitch.tv/username/clip/Abc123)
+            </div>
+        </div>
+        
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p>Loading download interface...</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="iframe-container">
+                <div class="iframe-header">
+                    <h2 class="iframe-title"><i class="fas fa-download"></i> Download Interface</h2>
+                </div>
+                
+                <div class="info-box">
+                    <p><i class="fas fa-info-circle"></i> The download interface below is powered by our service. After loading, you'll see download options for your Twitch video.</p>
+                </div>
+                
+                <iframe id="previewFrame" sandbox="allow-same-origin allow-forms allow-scripts" src="about:blank"></iframe>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Paste Twitch URL</h3>
+                <p>Copy the full URL of the Twitch video or clip you want to download from your browser's address bar.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Load Download Interface</h3>
+                <p>Click the download button to load the interface with only the essential elements visible.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Download Your Video</h3>
+                <p>Use the interface to download your video in the desired quality and format.</p>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h3>Try these example URLs:</h3>
+            <div class="example-list">
+                <div class="example" onclick="setExample('https://www.twitch.tv/videos/1234567890')">
+                    VOD Example
+                </div>
+                <div class="example" onclick="setExample('https://www.twitch.tv/ninja/clip/ResourcefulBovineCheesePeteZaroll')">
+                    Ninja Clip
+                </div>
+                <div class="example" onclick="setExample('https://www.twitch.tv/shroud/clip/StylishSavagePigeonTwitchRPG')">
+                    Shroud Clip
+                </div>
+                <div class="example" onclick="setExample('https://www.twitch.tv/pokimane/clip/SpookyMistySandpiperPJSugar')">
+                    Pokimane Clip
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>This service provides Twitch video downloads using a similar interface to popular services.</p>
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> This tool is for personal use only. Please respect Twitch's terms of service and only download content you have rights to.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoUrlInput = document.getElementById('input');
+            const fetchBtn = document.getElementById('btn-download');
+            const previewFrame = document.getElementById('previewFrame');
+            const loader = document.getElementById('loader');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Set focus on input when page loads
+            videoUrlInput.focus();
+            
+            // Handle button click
+            function clickDownload() {
+                const videoUrl = videoUrlInput.value.trim();
+                
+                if (isValidTwitchUrl(videoUrl)) {
+                    errorMessage.style.display = 'none';
+                    loader.style.display = 'block';
+                    
+                    // Construct download URL
+                    const downloadUrl = `https://twiclips.com/download?url=${encodeURIComponent(videoUrl)}`;
+                    
+                    // Set iframe source after a small delay to show loader
+                    setTimeout(() => {
+                        previewFrame.src = downloadUrl;
+                        loader.style.display = 'none';
+                    }, 800);
+                } else {
+                    errorMessage.style.display = 'block';
+                }
+            }
+            
+            // Handle Enter key in input
+            videoUrlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    clickDownload();
+                }
+            });
+            
+            // Validate Twitch URL
+            function isValidTwitchUrl(url) {
+                const vodPattern = /^https?:\/\/(?:www\.)?twitch\.tv\/videos\/\d+(\?.*)?$/i;
+                const clipPattern = /^https?:\/\/(?:www\.)?twitch\.tv\/\w+\/clip\/\w+(\?.*)?$/i;
+                const mobilePattern = /^https?:\/\/m\.twitch\.tv\/\w+\/clip\/\w+(\?.*)?$/i;
+                
+                return vodPattern.test(url) || clipPattern.test(url) || mobilePattern.test(url);
+            }
+            
+            // Function to set example URL
+            window.setExample = function(url) {
+                videoUrlInput.value = url;
+                videoUrlInput.focus();
+            };
+            
+            // Paste content function
+            window.pasteContent = async function() {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    videoUrlInput.value = text;
+                } catch (err) {
+                    videoUrlInput.value = "https://www.twitch.tv/videos/1234567890";
+                }
+            };
+            
+            // Set a random example on load
+            const examples = [
+                'https://www.twitch.tv/videos/1234567890',
+                'https://www.twitch.tv/ninja/clip/ResourcefulBovineCheesePeteZaroll',
+                'https://www.twitch.tv/shroud/clip/StylishSavagePigeonTwitchRPG'
+            ];
+            videoUrlInput.value = examples[Math.floor(Math.random() * examples.length)];
+        });
+    </script>
+</body>
+</html>
