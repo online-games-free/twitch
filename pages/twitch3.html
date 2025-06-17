@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Video Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #6441a5;
+            --primary-dark: #4b307b;
+            --secondary: #9146ff;
+            --light: #f8f9fa;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            animation: fadeInDown 1s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            color: var(--secondary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--secondary), #aa7aff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(148, 76, 255, 0.3);
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: #d0d0d0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 1s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #e0e0ff;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(145, 70, 255, 0.3);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="text"]::placeholder {
+            color: #a0a0c0;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(100, 65, 165, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-icon {
+            font-size: 1.2rem;
+        }
+
+        .iframe-container {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1.5s ease;
+        }
+
+        .iframe-header {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .iframe-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .iframe-title i {
+            color: var(--secondary);
+        }
+
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            display: block;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s ease, background 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #e0e0ff;
+        }
+
+        .feature-desc {
+            color: #b0b0d0;
+            font-size: 0.95rem;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #e0e0ff;
+            font-size: 1.8rem;
+        }
+
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 250px;
+            max-width: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            line-height: 40px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 40px;
+            color: #a0a0c0;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .disclaimer {
+            max-width: 800px;
+            margin: 0 auto 20px;
+            padding: 15px;
+            background: rgba(220, 53, 69, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tagline {
+                font-size: 1rem;
+            }
+            
+            .input-section, .instructions {
+                padding: 20px;
+            }
+            
+            .input-wrapper {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            iframe {
+                height: 400px;
+            }
+            
+            .feature-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 20px 0;
+            }
+            
+            h1 {
+                font-size: 1.7rem;
+            }
+            
+            iframe {
+                height: 300px;
+            }
+            
+            .step {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fab fa-twitch logo-icon"></i>
+                <h1>Twitch Video Downloader</h1>
+            </div>
+            <p class="tagline">Download your favorite Twitch videos, clips, and streams in high quality with our fast and easy-to-use tool</p>
+        </header>
+
+        <div class="main-content">
+            <section class="input-section">
+                <div class="form-group">
+                    <label for="twitch-url">Enter Twitch Video URL</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="twitch-url" placeholder="https://www.twitch.tv/streamer/video/123456789" autocomplete="off">
+                        <button id="download-btn" class="btn btn-primary">
+                            <i class="fas fa-download btn-icon"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="iframe-container">
+                <div class="iframe-header">
+                    <div class="iframe-title">
+                        <i class="fas fa-download"></i>
+                        <span>Download Interface</span>
+                    </div>
+                </div>
+                <iframe id="downloader-frame" src="https://untwitch.com/" title="Twitch Video Downloader"></iframe>
+            </section>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <i class="fas fa-bolt feature-icon"></i>
+                <h3 class="feature-title">Fast Downloading</h3>
+                <p class="feature-desc">Download videos at maximum speed with our optimized servers</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-film feature-icon"></i>
+                <h3 class="feature-title">Multiple Formats</h3>
+                <p class="feature-desc">Choose from MP4, MOV, AVI and other popular formats</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-mobile-alt feature-icon"></i>
+                <h3 class="feature-title">Mobile Friendly</h3>
+                <p class="feature-desc">Works perfectly on all devices including smartphones</p>
+            </div>
+        </div>
+
+        <section class="instructions">
+            <h3>How to Download Twitch Videos</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h4>Copy Video URL</h4>
+                    <p>Go to Twitch and copy the URL of the video you want to download</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h4>Paste URL</h4>
+                    <p>Paste the URL in the input field above and click "Download"</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h4>Select Quality</h4>
+                    <p>Choose your preferred quality and format in the downloader</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h4>Download</h4>
+                    <p>Click the download button and save your video</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="disclaimer">
+                <p><strong>Disclaimer:</strong> This tool is for personal use only. Please respect Twitch's terms of service and only download content that you have rights to.</p>
+            </div>
+            <p>© 2023 Twitch Video Downloader | Made with <i class="fas fa-heart" style="color: var(--secondary)"></i> for streamers</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const twitchUrlInput = document.getElementById('twitch-url');
+            const downloadBtn = document.getElementById('download-btn');
+            const downloaderFrame = document.getElementById('downloader-frame');
+            
+            // Set focus on input when page loads
+            twitchUrlInput.focus();
+            
+            // Handle download button click
+            downloadBtn.addEventListener('click', function() {
+                const url = twitchUrlInput.value.trim();
+                
+                if (url) {
+                    // Validate Twitch URL pattern
+                    const twitchPattern = /^(https?:\/\/)?(www\.)?twitch\.tv\/[a-zA-Z0-9_]+\/?(video\/[0-9]+)?\/?$/;
+                    
+                    if (twitchPattern.test(url)) {
+                        // Create the untwitch URL
+                        const downloadUrl = `https://untwitch.com/download?url=${encodeURIComponent(url)}`;
+                        
+                        // Set iframe source
+                        downloaderFrame.src = downloadUrl;
+                        
+                        // Scroll to iframe
+                        downloaderFrame.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('Please enter a valid Twitch video URL');
+                        twitchUrlInput.focus();
+                    }
+                } else {
+                    alert('Please enter a Twitch video URL');
+                    twitchUrlInput.focus();
+                }
+            });
+            
+            // Handle Enter key press in input field
+            twitchUrlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    downloadBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
