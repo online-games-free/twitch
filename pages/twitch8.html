@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipMaster - Ultimate Twitch Clip Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /*
+        ========================================
+        --- 1. GENERAL STYLES (For All Devices) ---
+        ========================================
+        */
+        :root {
+            --twitch-purple: #9147ff;
+            --dark-bg: #0e0e10;
+            --card-bg: #18181b;
+            --card-border: #2a2a2e;
+            --text-light: #efeff1;
+            --text-gray: #adadb8;
+            --error-red: #ff5555;
+            --transition: all 0.3s ease-in-out;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-light);
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(145, 71, 255, 0.1), transparent 30%),
+                radial-gradient(circle at 85% 85%, rgba(145, 71, 255, 0.08), transparent 30%);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+        /* Header & Logo */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-light); }
+        .nav-logo .logo-icon {
+            background: var(--twitch-purple);
+            width: 40px; height: 40px; border-radius: 10px;
+            display: grid; place-items: center; font-size: 20px; color: white; transition: var(--transition);
+        }
+        .nav-logo:hover .logo-icon { transform: rotate(-10deg) scale(1.1); }
+        .nav-logo .logo-text { font-size: 1.5rem; font-weight: 700; }
+
+        /* Main Title and Subtitle */
+        .hero { text-align: center; padding: 80px 20px 60px; }
+        .subtitle { font-size: 1.2rem; color: var(--text-gray); max-width: 600px; margin: 0 auto 40px; }
+
+        /* Search Box and Button */
+        .search-container { width: 100%; max-width: 650px; margin: 0 auto; }
+        #searchForm {
+            display: flex; gap: 15px; background: var(--card-bg); border-radius: 12px;
+            padding: 10px; border: 1px solid var(--card-border); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        #clipUrlInput {
+            flex-grow: 1; background: transparent; border: none; color: var(--text-light);
+            font-size: 1rem; padding: 0 15px; outline: none;
+        }
+        #searchButton {
+            background: var(--twitch-purple); color: white; border: none; border-radius: 8px;
+            padding: 12px 25px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s;
+        }
+        #searchButton:hover { background-color: #a970ff; }
+        #errorMessage {
+            color: var(--error-red); margin-top: 10px; font-size: 0.9rem;
+            height: 1.2rem; text-align: center; opacity: 0; transition: opacity 0.3s;
+        }
+
+        /* Downloader Section (Loader and Iframe) */
+        .downloader-result-wrapper {
+            display: none; margin-top: 40px; opacity: 0; transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .downloader-result-wrapper.visible { display: block; opacity: 1; transform: translateY(0); }
+        .loader { text-align: center; padding: 60px 20px; }
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--twitch-purple); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loader p { font-size: 1.1rem; color: var(--text-gray); }
+        #downloaderInstruction {
+            display: none; text-align: center; background: rgba(145, 71, 255, 0.1); 
+            border: 1px solid var(--card-border); padding: 15px; border-radius: 12px; margin-bottom: 20px;
+        }
+        #downloaderInstruction i { color: var(--twitch-purple); margin-right: 10px; }
+        .reset-button-container { text-align: center; margin-top: 30px; }
+        #resetButton {
+            background: none; border: 1px solid var(--card-border); color: var(--text-gray);
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: var(--transition);
+        }
+        #resetButton:hover { background: var(--card-bg); color: var(--text-light); border-color: var(--twitch-purple); }
+        
+        /* Iframe Container and Content */
+        .iframe-container {
+            width: 100%; border-radius: 16px; overflow: hidden; position: relative;
+            background: #000; border: 1px solid var(--card-border);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            transition: height 0.8s ease-in-out; 
+            opacity: 0; transform: scale(0.95); animation: fadeInGrow 0.6s 0.3s forwards;
+        }
+        @keyframes fadeInGrow { to { opacity: 1; transform: scale(1); } }
+        #clipseyFrame { width: 100%; border: none; display: block; }
+        
+        /* Lower Content Section & Footer */
+        .content-section { padding: 80px 0 40px; }
+        .section-title { text-align: center; font-size: 2.5rem; font-weight: 700; margin-bottom: 40px; color: var(--text-light); }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .feature-card {
+            background: var(--card-bg); padding: 30px; border-radius: 16px;
+            border: 1px solid var(--card-border); transition: var(--transition);
+        }
+        footer { padding: 40px 20px; margin-top: 40px; border-top: 1px solid var(--card-border); text-align: center; }
+
+
+        /*
+        ==================================================================
+        --- 2. DESKTOP-SPECIFIC STYLES (for screens > 768px wide) ---
+        ==================================================================
+        */
+        h1 { font-size: 3.5rem; font-weight: 800; }
+        
+        /* This negative margin pushes the iframe's own header out of view on PC */
+        #clipseyFrame {
+            margin-top: -95px; 
+            height: calc(100% + 95px);
+        }
+
+
+        /*
+        ==================================================================
+        --- 3. MOBILE-SPECIFIC STYLES (for screens <= 768px wide) ---
+        ==================================================================
+        */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.8rem; }
+            
+            /* Stacks the search bar and button vertically on small screens */
+            #searchForm { flex-direction: column; padding: 15px; }
+            #clipUrlInput { padding: 12px 15px; text-align: center; }
+            #searchButton { padding: 15px; }
+
+            /* This negative margin is larger for mobile to hide the iframe's header */
+            #clipseyFrame {
+                margin-top: -170px; 
+                height: calc(100% + 170px); 
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="nav-logo">
+                    <div class="logo-icon"><i class="fab fa-twitch"></i></div>
+                    <span class="logo-text">ClipMaster</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="searchSection" class="hero">
+            <h1>Download any <span class="highlight">Twitch Clip</span></h1>
+            <p class="subtitle">Just paste the clip link below to get started. Fast, free, and in the highest quality available.</p>
+            <div class="search-container">
+                <form id="searchForm" novalidate>
+                    <input type="url" id="clipUrlInput" placeholder="Paste Twitch Clip URL here..." required>
+                    <button type="submit" id="searchButton"><i class="fas fa-cloud-download-alt"></i> Get Clip</button>
+                </form>
+                <p id="errorMessage"></p>
+            </div>
+        </section>
+
+        <div id="downloaderResultWrapper" class="downloader-result-wrapper">
+            <div id="loader" class="loader">
+                <div class="spinner"></div>
+                <p>Preparing the downloader... <span id="countdown">5</span></p>
+            </div>
+            <section id="downloaderSection" style="display: none;">
+                <div id="downloaderInstruction">
+                    <p><i class="fas fa-info-circle"></i>Downloader ready! <strong>Paste your link again below</strong> to begin.</p>
+                </div>
+                <div class="iframe-container">
+                    <iframe id="clipseyFrame" title="Twitch Clip Downloader"></iframe>
+                </div>
+                <div class="reset-button-container">
+                    <button id="resetButton"><i class="fas fa-sync-alt"></i> Download Another Clip</button>
+                </div>
+            </section>
+        </div>
+
+        <section id="featuresSection" class="content-section">
+            <h2 class="section-title">Why ClipMaster?</h2>
+            <div class="features-grid">
+                <div class="feature-card"><h3>Instant Processing</h3></div>
+                <div class="feature-card"><h3>Highest Quality</h3></div>
+                <div class="feature-card"><h3>Mobile Friendly</h3></div>
+                <div class="feature-card"><h3>Safe & Private</h3></div>
+            </div>
+        </section>
+    </main>
+    
+    <footer id="contact">
+        <p>© 2023 ClipMaster. Service powered by Clipsey.com.</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ===================================================
+            // --- EDIT THESE VALUES TO CUSTOMIZE ---
+            // ===================================================
+            const CONFIG = {
+                // Timers (in milliseconds, 1000ms = 1 second)
+                initialCountdownSeconds: 5,
+                heightChangeDelaySeconds: 10,
+
+                // Iframe Heights (as text, like '420px')
+                desktopInitialHeight: '420px',
+                desktopFinalHeight: '780px',
+                mobileInitialHeight: '450px',
+                mobileFinalHeight: '720px',
+            };
+            // ===================================================
+
+
+            // --- Getting references to all the HTML elements ---
+            const searchForm = document.getElementById('searchForm');
+            const clipUrlInput = document.getElementById('clipUrlInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const searchSection = document.getElementById('searchSection');
+            const featuresSection = document.getElementById('featuresSection');
+            const downloaderResultWrapper = document.getElementById('downloaderResultWrapper');
+            const loader = document.getElementById('loader');
+            const countdownSpan = document.getElementById('countdown');
+            const downloaderSection = document.getElementById('downloaderSection');
+            const downloaderInstruction = document.getElementById('downloaderInstruction');
+            const clipseyFrame = document.getElementById('clipseyFrame');
+            const resetButton = document.getElementById('resetButton');
+            const iframeContainer = document.querySelector('.iframe-container');
+
+            const twitchClipRegex = /^(https?:\/\/)?(www\.)?(clips\.twitch\.tv\/|twitch\.tv\/[a-zA-Z0-9_]+\/clip\/)([a-zA-Z0-9_-]+)/;
+            
+            let countdownInterval, heightTimer;
+
+            // --- What happens when you click the "Get Clip" button ---
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (twitchClipRegex.test(clipUrlInput.value.trim())) {
+                    errorMessage.style.opacity = '0';
+                    startDownloadProcess();
+                } else {
+                    errorMessage.textContent = 'Please enter a valid Twitch Clip URL.';
+                    errorMessage.style.opacity = '1';
+                }
+            });
+
+            // --- Function to start the initial countdown ---
+            function startDownloadProcess() {
+                searchSection.style.display = 'none';
+                featuresSection.style.display = 'none';
+                downloaderResultWrapper.classList.add('visible');
+                loader.style.display = 'block';
+
+                let countdown = CONFIG.initialCountdownSeconds;
+                countdownSpan.textContent = countdown;
+                downloaderSection.style.display = 'none';
+
+                if (countdownInterval) clearInterval(countdownInterval);
+                countdownInterval = setInterval(() => {
+                    countdown--;
+                    countdownSpan.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        showDownloader();
+                    }
+                }, 1000);
+            }
+
+            // --- Function to show the iframe and start the height change timer ---
+            function showDownloader() {
+                loader.style.display = 'none';
+                downloaderInstruction.style.display = 'block';
+                downloaderSection.style.display = 'block';
+                
+                clipseyFrame.src = `https://clipsey.com/`;
+                clipseyFrame.scrolling = 'no'; // Scrolling is disabled
+
+                // Check if the screen is mobile or desktop size
+                const isMobile = window.innerWidth <= 768;
+
+                // Set the correct INITIAL height
+                iframeContainer.style.height = isMobile ? CONFIG.mobileInitialHeight : CONFIG.desktopInitialHeight;
+                
+                // Set a timer to change to the FINAL height
+                heightTimer = setTimeout(() => {
+                    iframeContainer.style.height = isMobile ? CONFIG.mobileFinalHeight : CONFIG.desktopFinalHeight;
+                }, CONFIG.heightChangeDelaySeconds * 1000); // Convert seconds to milliseconds
+            }
+
+            // --- What happens when you click the "Download Another Clip" button ---
+            resetButton.addEventListener('click', () => {
+                clearTimeout(heightTimer); // Stop the height-change timer
+                downloaderResultWrapper.classList.remove('visible');
+                
+                setTimeout(() => {
+                    searchSection.style.display = 'block';
+                    featuresSection.style.display = 'block';
+                    clipUrlInput.value = '';
+                    clipseyFrame.src = 'about:blank';
+                    downloaderInstruction.style.display = 'none';
+                    iframeContainer.style.height = ''; // Reset height to default from CSS
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>
