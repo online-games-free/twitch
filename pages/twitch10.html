@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipMaster Pro - Ultimate Twitch Clip Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --twitch-purple: #9147ff;
+            --twitch-purple-dark: #5c16c5;
+            --dark-bg: #0e0e10;
+            --card-bg: #18181b;
+            --card-border: #2a2a2e;
+            --text-light: #efeff1;
+            --text-gray: #adadb8;
+            --error-red: #ff5555;
+            --success-green: #4ade80;
+            --transition: all 0.3s ease-in-out;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Poppins', 'Segoe UI', sans-serif; 
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-light);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(145, 71, 255, 0.1), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(145, 71, 255, 0.08), transparent 30%);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+            width: 100%;
+        }
+
+        /* Header & Navigation */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            position: relative;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .nav-logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            text-decoration: none; 
+            color: var(--text-light);
+            z-index: 10;
+        }
+        
+        .nav-logo .logo-icon {
+            background: linear-gradient(135deg, var(--twitch-purple), var(--twitch-purple-dark));
+            width: 50px; 
+            height: 50px; 
+            border-radius: 12px;
+            display: grid; 
+            place-items: center; 
+            font-size: 24px; 
+            color: white; 
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(145, 71, 255, 0.3);
+        }
+        
+        .nav-logo:hover .logo-icon { 
+            transform: rotate(-10deg) scale(1.1); 
+            box-shadow: 0 6px 20px rgba(145, 71, 255, 0.4);
+        }
+        
+        .nav-logo .logo-text { 
+            font-size: 1.8rem; 
+            font-weight: 700; 
+            background: linear-gradient(90deg, var(--twitch-purple), #a970ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            padding: 5px 0;
+        }
+        
+        .nav-links a:hover {
+            color: var(--twitch-purple);
+        }
+        
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--twitch-purple);
+            transition: var(--transition);
+        }
+        
+        .nav-links a:hover:after {
+            width: 100%;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.8rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        /* Hero Section */
+        .hero { 
+            text-align: center; 
+            padding: 80px 20px 60px; 
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, var(--text-light), #a970ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle { 
+            font-size: 1.3rem; 
+            color: var(--text-gray); 
+            margin: 0 auto 40px; 
+            font-weight: 300;
+        }
+
+        /* Search Box */
+        .search-container { 
+            width: 100%; 
+            max-width: 700px; 
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        #searchForm {
+            display: flex; 
+            gap: 15px; 
+            background: var(--card-bg); 
+            border-radius: 15px;
+            padding: 15px; 
+            border: 1px solid var(--card-border); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+        
+        #searchForm:focus-within {
+            border-color: var(--twitch-purple);
+            box-shadow: 0 10px 30px rgba(145, 71, 255, 0.3);
+        }
+        
+        #clipUrlInput {
+            flex-grow: 1; 
+            background: transparent; 
+            border: none; 
+            color: var(--text-light);
+            font-size: 1.1rem; 
+            padding: 0 15px; 
+            outline: none;
+        }
+        
+        #searchButton {
+            background: linear-gradient(135deg, var(--twitch-purple), var(--twitch-purple-dark)); 
+            color: white; 
+            border: none; 
+            border-radius: 10px;
+            padding: 15px 35px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(145, 71, 255, 0.3);
+        }
+        
+        #searchButton:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(145, 71, 255, 0.4);
+        }
+        
+        #errorMessage {
+            color: var(--error-red); 
+            margin-top: 10px; 
+            font-size: 1rem;
+            height: 1.2rem; 
+            text-align: center; 
+            opacity: 0; 
+            transition: opacity 0.3s;
+        }
+
+        /* Downloader Section */
+        .downloader-result-wrapper {
+            display: none; 
+            margin-top: 40px; 
+            opacity: 0; 
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            width: 100%;
+            position: relative;
+        }
+        
+        .downloader-result-wrapper.visible { 
+            display: block; 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+        
+        .loader { 
+            text-align: center; 
+            padding: 60px 20px; 
+        }
+        
+        .spinner {
+            width: 60px; 
+            height: 60px; 
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--twitch-purple); 
+            border-radius: 50%;
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin { 
+            100% { 
+                transform: rotate(360deg); 
+            } 
+        }
+        
+        .loader p { 
+            font-size: 1.2rem; 
+            color: var(--text-gray); 
+        }
+        
+        #downloaderInstruction {
+            display: none; 
+            text-align: center; 
+            background: rgba(145, 71, 255, 0.1); 
+            border: 1px solid var(--card-border); 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        #downloaderInstruction i { 
+            color: var(--twitch-purple); 
+            margin-right: 10px; 
+            font-size: 1.3rem;
+        }
+        
+        .reset-button-container { 
+            text-align: center; 
+            margin-top: 30px; 
+        }
+        
+        #resetButton {
+            background: linear-gradient(135deg, var(--twitch-purple), var(--twitch-purple-dark));
+            border: none; 
+            color: white;
+            padding: 12px 30px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: var(--transition);
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(145, 71, 255, 0.3);
+        }
+        
+        #resetButton:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(145, 71, 255, 0.4);
+        }
+        
+        /* Iframe Container */
+        .iframe-container {
+            width: 100%; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            position: relative;
+            background: #000; 
+            border: 1px solid rgba(145, 71, 255, 0.2);
+            transition: height 0.8s ease-in-out; 
+            opacity: 0; 
+            transform: scale(0.95); 
+            animation: fadeInGrow 0.6s 0.3s forwards;
+            height: 555px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        @keyframes fadeInGrow { 
+            to { 
+                opacity: 1; 
+                transform: scale(1); 
+            } 
+        }
+        
+        #clipseyFrame { 
+            width: 100%; 
+            height: 100%;
+            border: none; 
+            display: block; 
+            margin-top: -155px; /* Hide header - desktop */
+            height: calc(100% + 95px); /* Desktop height adjustment */
+        }
+        
+        /* Features Section */
+        .content-section { 
+            padding: 80px 0 40px; 
+        }
+        
+        .section-title { 
+            text-align: center; 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            margin-bottom: 40px; 
+            color: var(--text-light); 
+            position: relative;
+        }
+        
+        .section-title:after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--twitch-purple), var(--twitch-purple-dark));
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+        
+        .features-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 30px; 
+        }
+        
+        .feature-card {
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 16px;
+            border: 1px solid var(--card-border); 
+            transition: var(--transition);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--twitch-purple), var(--twitch-purple-dark));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--twitch-purple);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-card:hover:before {
+            transform: scaleX(1);
+        }
+        
+        .feature-card i {
+            font-size: 3rem;
+            color: var(--twitch-purple);
+            margin-bottom: 20px;
+            background: rgba(145, 71, 255, 0.1);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            transition: var(--transition);
+        }
+        
+        .feature-card:hover i {
+            transform: rotate(10deg) scale(1.1);
+            background: rgba(145, 71, 255, 0.2);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text-light);
+        }
+        
+        .feature-card p {
+            color: var(--text-gray);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+        
+        /* SEO Content */
+        .seo-content {
+            padding: 80px 0;
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(24, 24, 27, 0.5);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            border: 1px solid rgba(145, 71, 255, 0.1);
+        }
+        
+        .seo-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: var(--text-light);
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .seo-content h2:after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--twitch-purple), var(--twitch-purple-dark));
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+        
+        .seo-content h3 {
+            font-size: 1.8rem;
+            margin: 40px 0 20px;
+            color: #a970ff;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .seo-content h3:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            background: var(--twitch-purple);
+            border-radius: 50%;
+        }
+        
+        .seo-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: var(--text-gray);
+        }
+        
+        .seo-content ul {
+            padding-left: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .seo-content li {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            position: relative;
+        }
+        
+        .seo-content li:before {
+            content: "•";
+            color: var(--twitch-purple);
+            font-size: 1.5rem;
+            position: absolute;
+            left: -20px;
+            top: -3px;
+        }
+        
+        /* Footer */
+        footer { 
+            padding: 60px 20px 30px; 
+            margin-top: 80px;
+            border-top: 1px solid var(--card-border); 
+            text-align: center; 
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        footer p {
+            color: var(--text-gray);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .social-links a {
+            color: var(--text-gray);
+            font-size: 1.5rem;
+            transition: var(--transition);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .social-links a:hover {
+            color: var(--twitch-purple);
+            transform: translateY(-5px);
+            background: rgba(145, 71, 255, 0.1);
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: var(--twitch-purple);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .hero {
+                padding: 60px 20px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 { 
+                font-size: 2.3rem; 
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 70%;
+                height: 100vh;
+                background: var(--card-bg);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                transition: var(--transition);
+                z-index: 90;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            .nav-links a {
+                font-size: 1.3rem;
+                padding: 15px 0;
+            }
+            
+            .nav-logo .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            #searchForm { 
+                flex-direction: column; 
+                padding: 20px; 
+            }
+            
+            #clipUrlInput { 
+                padding: 15px; 
+                text-align: center; 
+                margin-bottom: 10px;
+            }
+            
+            #searchButton { 
+                padding: 15px; 
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .iframe-container {
+                height: 450px;
+            }
+            
+            #clipseyFrame {
+                margin-top: -170px;
+                height: calc(100% + 170px);
+            }
+            
+            .seo-content {
+                padding: 30px 20px;
+            }
+            
+            .seo-content h2 {
+                font-size: 2rem;
+            }
+            
+            .seo-content h3 {
+                font-size: 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-logo .logo-text {
+                font-size: 1.3rem;
+            }
+            
+            .feature-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="nav-logo">
+                    <div class="logo-icon"><i class="fab fa-twitch"></i></div>
+                    <span class="logo-text">ClipMaster Pro</span>
+                </a>
+                
+                <button class="mobile-menu-btn" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#seo-content">FAQ</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="searchSection" class="hero">
+            <h1>Download Any Twitch Clip in HD</h1>
+            <p class="subtitle">Save your favorite gaming moments forever with our fast, free, and easy-to-use downloader</p>
+            <div class="search-container">
+                <form id="searchForm" novalidate>
+                    <input type="url" id="clipUrlInput" placeholder="Paste Twitch Clip URL here..." required>
+                    <button type="submit" id="searchButton"><i class="fas fa-cloud-download-alt"></i> Get Clip</button>
+                </form>
+                <p id="errorMessage"></p>
+            </div>
+        </section>
+
+        <div id="downloaderResultWrapper" class="downloader-result-wrapper">
+            <div id="loader" class="loader">
+                <div class="spinner"></div>
+                <p>Preparing the downloader... <span id="countdown">5</span></p>
+            </div>
+            <section id="downloaderSection" style="display: none;">
+                <div id="downloaderInstruction">
+                    <p><i class="fas fa-info-circle"></i> Downloader ready! Paste your link again below to begin</p>
+                </div>
+                <div class="iframe-container">
+                    <iframe id="clipseyFrame" title="Twitch Clip Downloader" src="about:blank"></iframe>
+                </div>
+                <div class="reset-button-container">
+                    <button id="resetButton"><i class="fas fa-redo-alt"></i> Download Another Clip</button>
+                </div>
+            </section>
+        </div>
+
+        <section id="features" class="content-section">
+            <h2 class="section-title">Why Choose ClipMaster Pro?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Instant Processing</h3>
+                    <p>Download clips in seconds with our high-speed processing technology. No waiting, no delays.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-hd"></i>
+                    <h3>Highest Quality</h3>
+                    <p>Get your clips in full HD resolution. Preserve every detail of your favorite moments.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>Mobile Friendly</h3>
+                    <p>Works perfectly on all devices. Download clips directly to your phone or tablet.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Safe & Private</h3>
+                    <p>No registration required. We never store your clips or personal information.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="seo-content" class="seo-content">
+            <h2>The Ultimate Twitch Clip Downloader</h2>
+            
+            <h3>Save Your Favorite Gaming Moments Forever</h3>
+            <p>ClipMaster Pro is the premier solution for downloading Twitch clips directly to your device. Whether you're a streamer wanting to save your best moments, a fan preserving epic gameplay, or a content creator gathering material, our tool makes the process simple and efficient.</p>
+            
+            <h3>How to Download Twitch Clips</h3>
+            <p>Downloading clips with ClipMaster Pro is incredibly straightforward:</p>
+            <ul>
+                <li>Find the Twitch clip you want to save</li>
+                <li>Copy the URL from your browser's address bar</li>
+                <li>Paste the URL into ClipMaster's download box</li>
+                <li>Click "Get Clip" and download your video</li>
+            </ul>
+            
+            <h3>Why Download Twitch Clips?</h3>
+            <p>Twitch clips capture unforgettable moments in gaming history - incredible plays, hilarious reactions, and memorable interactions. But these clips disappear after a while unless you save them. With ClipMaster Pro:</p>
+            <ul>
+                <li>Preserve your favorite gaming moments forever</li>
+                <li>Create compilations and highlight reels</li>
+                <li>Share clips on other social media platforms</li>
+                <li>Build a personal archive of gaming memories</li>
+                <li>Use clips in your content creation projects</li>
+            </ul>
+            
+            <h3>Premium Features</h3>
+            <p>Our downloader stands out from the competition with these premium features:</p>
+            <ul>
+                <li><strong>HD Quality:</strong> Download clips in the highest available resolution</li>
+                <li><strong>No Watermarks:</strong> Get clean video files without any branding</li>
+                <li><strong>Lightning Fast:</strong> Process clips in seconds, not minutes</li>
+                <li><strong>Device Compatibility:</strong> Works on PC, Mac, iOS, and Android</li>
+                <li><strong>Completely Free:</strong> No hidden costs or premium paywalls</li>
+                <li><strong>Privacy Focused:</strong> We don't track or store your downloads</li>
+            </ul>
+        </section>
+    </main>
+    
+    <footer id="contact">
+        <div class="container">
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-twitch"></i></a>
+            </div>
+            
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+                <a href="#">FAQ</a>
+                <a href="#">Blog</a>
+            </div>
+            
+            <p>© 2023 ClipMaster Pro. The ultimate solution for downloading Twitch clips.</p>
+            <p>Service powered by Clipsey.com. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ===================================================
+            // --- EDIT THESE VALUES TO CUSTOMIZE ---
+            // ===================================================
+            const CONFIG = {
+                // Timers (in milliseconds, 1000ms = 1 second)
+                initialCountdownSeconds: 5,
+                heightChangeDelaySeconds: 10,
+
+                // Iframe Heights (as text, like '420px')
+                desktopInitialHeight: '555px',
+                desktopFinalHeight: '790px',
+                mobileInitialHeight: '450px',
+                mobileFinalHeight: '720px',
+            };
+            // ===================================================
+
+            // Elements
+            const searchForm = document.getElementById('searchForm');
+            const clipUrlInput = document.getElementById('clipUrlInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const searchSection = document.getElementById('searchSection');
+            const featuresSection = document.getElementById('features');
+            const downloaderResultWrapper = document.getElementById('downloaderResultWrapper');
+            const loader = document.getElementById('loader');
+            const countdownSpan = document.getElementById('countdown');
+            const downloaderSection = document.getElementById('downloaderSection');
+            const downloaderInstruction = document.getElementById('downloaderInstruction');
+            const clipseyFrame = document.getElementById('clipseyFrame');
+            const resetButton = document.getElementById('resetButton');
+            const iframeContainer = document.querySelector('.iframe-container');
+            const menuToggle = document.getElementById('menuToggle');
+            const navLinks = document.getElementById('navLinks');
+
+            const twitchClipRegex = /^(https?:\/\/)?(www\.)?(clips\.twitch\.tv\/|twitch\.tv\/[a-zA-Z0-9_]+\/clip\/)([a-zA-Z0-9_-]+)/;
+            
+            let countdownInterval, heightTimer;
+
+            // Mobile menu toggle
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                menuToggle.innerHTML = navLinks.classList.contains('active') ? 
+                    '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                });
+            });
+
+            // Form submission
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (twitchClipRegex.test(clipUrlInput.value.trim())) {
+                    errorMessage.style.opacity = '0';
+                    startDownloadProcess();
+                } else {
+                    errorMessage.textContent = 'Please enter a valid Twitch Clip URL. Example: https://clips.twitch.tv/ClipName';
+                    errorMessage.style.opacity = '1';
+                }
+            });
+
+            // Start download process
+            function startDownloadProcess() {
+                searchSection.style.display = 'none';
+                featuresSection.style.display = 'none';
+                downloaderResultWrapper.classList.add('visible');
+                loader.style.display = 'block';
+
+                let countdown = CONFIG.initialCountdownSeconds;
+                countdownSpan.textContent = countdown;
+                downloaderSection.style.display = 'none';
+
+                if (countdownInterval) clearInterval(countdownInterval);
+                countdownInterval = setInterval(() => {
+                    countdown--;
+                    countdownSpan.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        showDownloader();
+                    }
+                }, 1000);
+            }
+
+            // Show downloader
+            function showDownloader() {
+                loader.style.display = 'none';
+                downloaderInstruction.style.display = 'block';
+                downloaderSection.style.display = 'block';
+                
+                clipseyFrame.src = `https://clipsey.com/`;
+                clipseyFrame.scrolling = 'no';
+
+                // Set a timer to change to the FINAL height
+                heightTimer = setTimeout(() => {
+                    const isMobile = window.innerWidth <= 768;
+                    iframeContainer.style.height = isMobile ? CONFIG.mobileFinalHeight : CONFIG.desktopFinalHeight;
+                }, CONFIG.heightChangeDelaySeconds * 1000);
+            }
+
+            // Reset button
+            resetButton.addEventListener('click', () => {
+                clearTimeout(heightTimer);
+                downloaderResultWrapper.classList.remove('visible');
+                
+                setTimeout(() => {
+                    searchSection.style.display = 'block';
+                    featuresSection.style.display = 'block';
+                    clipUrlInput.value = '';
+                    clipseyFrame.src = 'about:blank';
+                    downloaderInstruction.style.display = 'none';
+                    
+                    // Reset iframe height to initial value
+                    const isMobile = window.innerWidth <= 768;
+                    iframeContainer.style.height = isMobile ? CONFIG.mobileInitialHeight : CONFIG.desktopInitialHeight;
+                    
+                    // Scroll to top
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>
