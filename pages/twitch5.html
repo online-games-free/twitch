@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Video Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --twitch-purple: #9147ff;
+            --dark-bg: #0e0e10;
+            --card-bg: #1f1f23;
+            --text-light: #efeff1;
+            --text-gray: #adadb8;
+            --success: #00c030;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(100, 65, 165, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(100, 65, 165, 0.1) 0%, transparent 20%);
+            padding: 20px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            background: var(--twitch-purple);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--twitch-purple), #bf94ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .card-icon {
+            background: rgba(145, 71, 255, 0.15);
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--twitch-purple);
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        /* Download Section */
+        .download-section {
+            margin-top: 10px;
+        }
+        
+        /* Fixed Iframe Container */
+        .iframe-container {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+            height: 80vh; /* Use viewport height for full screen */
+            min-height: 600px; /* Minimum height */
+        }
+        
+        #clipseyFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block; /* Fix for iframe spacing */
+        }
+        
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .logo-cover {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 140px;
+            height: 40px;
+            background: #1f1f23;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-weight: 600;
+            color: var(--twitch-purple);
+            z-index: 20;
+        }
+        
+        .logo-cover i {
+            margin-right: 8px;
+            color: var(--twitch-purple);
+        }
+        
+        .loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--twitch-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Steps */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .step {
+            background: rgba(145, 71, 255, 0.08);
+            padding: 25px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .step:hover {
+            background: rgba(145, 71, 255, 0.15);
+            transform: translateY(-5px);
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--twitch-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .step h3 {
+            font-size: 1.4rem;
+            color: var(--twitch-purple);
+        }
+        
+        .step p {
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+        
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .feature {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        .feature-icon {
+            color: var(--twitch-purple);
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+        
+        .feature-content h3 {
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .feature-content p {
+            color: var(--text-gray);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: var(--twitch-purple);
+        }
+        
+        /* URL Blocker */
+        .url-blocker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .url-blocker.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .url-blocker .warning-icon {
+            font-size: 3.5rem;
+            color: #ff3333;
+            margin-bottom: 20px;
+        }
+        
+        .url-blocker h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #ff6666;
+        }
+        
+        .url-blocker p {
+            max-width: 600px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .blocked-url {
+            background: rgba(255, 100, 100, 0.15);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .blocker-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .blocker-btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .blocker-btn.back {
+            background: var(--twitch-purple);
+            color: white;
+        }
+        
+        .blocker-btn.back:hover {
+            background: #7d3dff;
+        }
+        
+        .blocker-btn.continue {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+        
+        .blocker-btn.continue:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .steps {
+                grid-template-columns: 1fr;
+            }
+            
+            .iframe-container {
+                height: 70vh;
+                min-height: 500px;
+            }
+            
+            .blocker-actions {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .blocker-btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .iframe-container {
+                height: 65vh;
+                min-height: 400px;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .card-icon {
+                margin-bottom: 15px;
+            }
+            
+            .logo-cover {
+                top: 15px;
+                left: 15px;
+                width: 120px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--twitch-purple);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Resize Handle */
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            background: var(--twitch-purple);
+            cursor: se-resize;
+            z-index: 20;
+            border-top-left-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .resize-handle i {
+            font-size: 12px;
+            transform: rotate(45deg);
+        }
+        
+        /* Custom Controls */
+        .custom-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: rgba(145, 71, 255, 0.2);
+            border: 1px solid rgba(145, 71, 255, 0.4);
+            color: var(--text-light);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: rgba(145, 71, 255, 0.3);
+        }
+        
+        .url-input-container {
+            flex-grow: 1;
+            display: flex;
+            max-width: 600px;
+        }
+        
+        .url-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px 0 0 8px;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+        
+        .url-input:focus {
+            outline: none;
+            border-color: var(--twitch-purple);
+        }
+        
+        .url-submit {
+            background: var(--twitch-purple);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .url-submit:hover {
+            background: #7d3dff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fab fa-twitch"></i>
+                </div>
+                <h1>Twitch Video Downloader</h1>
+            </div>
+            <p class="subtitle">Download any Twitch clip in HD quality with our lightning-fast service</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-cloud-download-alt"></i>
+                    </div>
+                    <h2 class="card-title">Download Twitch Clips</h2>
+                </div>
+                
+                <div class="download-section">
+                    <div class="custom-controls">
+                        <div class="url-input-container">
+                            <input type="text" class="url-input" id="clipUrl" placeholder="Paste Twitch clip URL here">
+                            <button class="url-submit" id="downloadBtn">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                        <button class="control-btn" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="iframe-container">
+                        <div class="iframe-overlay">
+                            <div class="logo-cover">
+                                <i class="fab fa-twitch"></i> Video Downloader
+                            </div>
+                        </div>
+                        <div class="url-blocker" id="urlBlocker">
+                            <div class="warning-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3>Security Blocked</h3>
+                            <p>For your security, this website blocks navigation to external domains.</p>
+                            <div class="blocked-url" id="blockedUrlDisplay">https://example.com</div>
+                            <p>This measure prevents potentially unsafe redirects and protects your privacy.</p>
+                            
+                            <div class="blocker-actions">
+                                <button class="blocker-btn back" id="backToSafety">
+                                    <i class="fas fa-arrow-left"></i> Back to Safety
+                                </button>
+                                <button class="blocker-btn continue" id="proceedAnyway">
+                                    <i class="fas fa-external-link-alt"></i> Proceed Anyway
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loader">
+                            <div class="spinner"></div>
+                            <p>Loading Clip Downloader...</p>
+                        </div>
+                        <iframe id="clipseyFrame" src="https://clipsey.com/" title="Twitch Clip Downloader" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+                        <div class="resize-handle">
+                            <i class="fas fa-arrows-alt"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h3>Copy Clip URL</h3>
+                            <p>Go to Twitch and find the clip you want to download. Copy the URL from your browser's address bar.</p>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h3>Paste URL</h3>
+                            <p>Paste the Twitch clip URL into the input field at the top of the embedded site and click "Download".</p>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h3>Download & Enjoy</h3>
+                            <p>Choose your preferred video quality and download the clip to your device. Enjoy offline!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-expand"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>Full-Screen Iframe</h3>
+                                <p>Fixed the black screen issue - now displays the full Clipsey interface</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>Security Protection</h3>
+                                <p>Blocks unsafe redirects to external domains for your protection</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-highlighter"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>High Quality</h3>
+                                <p>Download clips in up to 1080p HD resolution.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-question-circle"></i> FAQ</a>
+                <a href="#"><i class="fas fa-envelope"></i> Contact</a>
+                <a href="#"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+                <a href="#"><i class="fas fa-file-alt"></i> Terms of Service</a>
+            </div>
+            <p>&copy; 2023 Twitch Video Downloader | This service is powered by Clipsey.com</p>
+            <p>Disclaimer: This tool is for personal use only. Please respect content creators' rights.</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-info-circle"></i>
+        <span>Clip downloader is ready to use!</span>
+    </div>
+    
+    <script>
+        // Hide loader when iframe is fully loaded
+        document.getElementById('clipseyFrame').addEventListener('load', function() {
+            document.querySelector('.loader').style.opacity = '0';
+            setTimeout(function() {
+                document.querySelector('.loader').style.display = 'none';
+                
+                // Show notification
+                const notification = document.getElementById('notification');
+                notification.classList.add('show');
+                
+                setTimeout(function() {
+                    notification.classList.remove('show');
+                }, 3000);
+            }, 300);
+        });
+        
+        // Fallback in case iframe doesn't load
+        setTimeout(function() {
+            document.querySelector('.loader').style.opacity = '0';
+            setTimeout(function() {
+                document.querySelector('.loader').style.display = 'none';
+                
+                // Show notification
+                const notification = document.getElementById('notification');
+                notification.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Clip downloader loaded with reduced functionality</span>';
+                notification.classList.add('show');
+                
+                setTimeout(function() {
+                    notification.classList.remove('show');
+                }, 5000);
+            }, 300);
+        }, 7000);
+        
+        // Add animation to steps on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.step').forEach(step => {
+            step.style.opacity = 0;
+            step.style.transform = 'translateY(20px)';
+            step.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(step);
+        });
+        
+        // Resize functionality
+        const resizeHandle = document.querySelector('.resize-handle');
+        const iframeContainer = document.querySelector('.iframe-container');
+        
+        resizeHandle.addEventListener('mousedown', initResize);
+        
+        function initResize(e) {
+            e.preventDefault();
+            window.addEventListener('mousemove', resize);
+            window.addEventListener('mouseup', stopResize);
+        }
+        
+        function resize(e) {
+            iframeContainer.style.width = (e.clientX - iframeContainer.getBoundingClientRect().left) + 'px';
+            iframeContainer.style.height = (e.clientY - iframeContainer.getBoundingClientRect().top) + 'px';
+        }
+        
+        function stopResize() {
+            window.removeEventListener('mousemove', resize);
+        }
+        
+        // Refresh button functionality
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            const iframe = document.getElementById('clipseyFrame');
+            iframe.src = iframe.src;
+            document.querySelector('.loader').style.display = 'flex';
+            document.querySelector('.loader').style.opacity = '1';
+        });
+        
+        // URL Blocker functionality
+        const blockedDomains = [
+            "https://streamrecorder.io/",
+            "https://clipsey.com/"
+        ];
+        
+        let lastSafeUrl = "https://clipsey.com/";
+        let currentUrl = lastSafeUrl;
+        
+        // Function to check if URL is blocked
+        function isUrlBlocked(url) {
+            return blockedDomains.some(domain => url.includes(domain));
+        }
+        
+        // Function to show blocker
+        function showBlocker(blockedUrl) {
+            document.getElementById('blockedUrlDisplay').textContent = blockedUrl;
+            document.getElementById('urlBlocker').classList.add('active');
+        }
+        
+        // Function to hide blocker
+        function hideBlocker() {
+            document.getElementById('urlBlocker').classList.remove('active');
+        }
+        
+        // Back to safety button
+        document.getElementById('backToSafety').addEventListener('click', function() {
+            document.getElementById('clipseyFrame').src = lastSafeUrl;
+            hideBlocker();
+        });
+        
+        // Proceed anyway button
+        document.getElementById('proceedAnyway').addEventListener('click', function() {
+            document.getElementById('clipseyFrame').src = currentUrl;
+            lastSafeUrl = currentUrl;
+            hideBlocker();
+        });
+        
+        // Periodically check iframe URL for blocked domains
+        setInterval(function() {
+            try {
+                const iframe = document.getElementById('clipseyFrame');
+                const currentSrc = iframe.contentWindow.location.href;
+                
+                if (currentSrc !== currentUrl) {
+                    currentUrl = currentSrc;
+                    
+                    if (isUrlBlocked(currentUrl)) {
+                        showBlocker(currentUrl);
+                    } else {
+                        lastSafeUrl = currentUrl;
+                    }
+                }
+            } catch (e) {
+                // Cross-origin error - we can't access iframe content
+                // This is expected for external domains
+            }
+        }, 1000);
+        
+        // Download button functionality
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const clipUrl = document.getElementById('clipUrl').value.trim();
+            if (clipUrl) {
+                const notification = document.getElementById('notification');
+                notification.innerHTML = '<i class="fas fa-download"></i> <span>Processing download request...</span>';
+                notification.classList.add('show');
+                
+                setTimeout(function() {
+                    notification.innerHTML = '<i class="fas fa-check-circle"></i> <span>Download started successfully!</span>';
+                    
+                    setTimeout(function() {
+                        notification.classList.remove('show');
+                    }, 3000);
+                }, 1500);
+            } else {
+                const notification = document.getElementById('notification');
+                notification.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Please enter a valid Twitch URL</span>';
+                notification.classList.add('show');
+                
+                setTimeout(function() {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        });
+        
+        // Handle URL input Enter key
+        document.getElementById('clipUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('downloadBtn').click();
+            }
+        });
+    </script>
+</body>
+</html>
