@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipMaster - Twitch Clip Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --twitch-purple: #9147ff;
+            --dark-bg: #0e0e10;
+            --card-bg: #1f1f23;
+            --text-light: #efeff1;
+            --text-gray: #adadb8;
+            --border-color: rgba(255, 255, 255, 0.07);
+            --transition: all 0.3s ease;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+        
+        body {
+            background: var(--dark-bg);
+            color: var(--text-light);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(100, 65, 165, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 90% 80%, rgba(100, 65, 165, 0.1) 0%, transparent 25%);
+            line-height: 1.6;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* --- HEADER / NAVBAR --- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        
+        .nav-logo .logo-icon {
+            background: var(--twitch-purple);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .nav-logo .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+        
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { color: var(--text-gray); text-decoration: none; transition: var(--transition); }
+        .nav-links a:hover { color: var(--twitch-purple); }
+        
+        .nav-toggle { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--twitch-purple), #bf94ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        
+        .subtitle { font-size: 1.2rem; color: var(--text-gray); max-width: 700px; margin: 0 auto; }
+        
+        /* Main Content & Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+        
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .card-icon {
+            background: rgba(145, 71, 255, 0.15);
+            width: 50px; height: 50px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: var(--twitch-purple);
+        }
+        .card-title { font-size: 1.8rem; font-weight: 700; }
+        
+        /* --- MODIFIED CSS FOR RESPONSIVE IFRAME --- */
+        
+        /* Default styles are now for DESKTOP (wider screens) */
+        .iframe-container {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden; /* CRITICAL for hiding content */
+            position: relative;
+            background: #000;
+            border: 1px solid var(--border-color);
+            /* NEW: Shorter, fixed height for the compact desktop view */
+            height: 420px;
+        }
+        
+        #clipseyFrame {
+            width: 100%;
+            border: none;
+            display: block;
+            /* NEW: Repositions the iframe to hide the top title but show "ENTER CLIP URL" */
+            margin-top: -95px; 
+            /* NEW: Calculated height to fill the container and hide the ad at the bottom */
+            height: calc(420px + 95px); /* container height + absolute margin-top */
+        }
+        
+        .loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.9); z-index: 10; transition: opacity 0.3s;
+        }
+        
+        .spinner {
+            width: 60px; height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--twitch-purple);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .scroll-activated-note {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--twitch-purple);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        /* FAQ/Content Section */
+        .content-section { margin-top: 50px; }
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        .faq-item {
+            background: rgba(145, 71, 255, 0.08);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+        .faq-item h3 { font-size: 1.3rem; color: var(--twitch-purple); margin-bottom: 10px; }
+        .faq-item p { color: var(--text-gray); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px 20px;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-gray); font-size: 0.9rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 77px;
+                right: 0;
+                width: 100%;
+                background: var(--card-bg);
+                padding: 20px;
+                text-align: center;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .nav-links.active { display: flex; }
+            .nav-toggle { display: block; }
+
+            /* --- MODIFIED: These styles now ONLY apply to MOBILE --- */
+            /* Override the desktop iframe styles for a taller mobile view */
+            .iframe-container {
+                height: 70vh;
+                min-height: 500px;
+            }
+            #clipseyFrame {
+                /* This margin hides the original site's full header */
+                margin-top: -170px;
+                height: calc(100% + 170px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="nav-logo">
+                    <div class="logo-icon"><i class="fab fa-twitch"></i></div>
+                    <span class="logo-text">ClipMaster</span>
+                </a>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#downloader">Downloader</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="nav-toggle" id="navToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1>The Ultimate Twitch Clip Downloader</h1>
+            <p class="subtitle">Instantly download any Twitch clip in the highest quality, for free. Paste a link and see the magic happen.</p>
+        </section>
+
+        <section id="downloader" class="card">
+            <div class="card-header">
+                <div class="card-icon"><i class="fas fa-cloud-download-alt"></i></div>
+                <h2 class="card-title">Start Downloading</h2>
+            </div>
+            <div class="iframe-container">
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p>Loading Downloader...</p>
+                </div>
+                <iframe id="clipseyFrame" src="https://clipsey.com/" title="Twitch Clip Downloader" scrolling="no"></iframe>
+            </div>
+        </section>
+
+        <section id="faq" class="content-section">
+            <div class="card">
+                <div class="card-header">
+                     <div class="card-icon"><i class="fas fa-question-circle"></i></div>
+                     <h2 class="card-title">Features & FAQ</h2>
+                </div>
+                <div class="faq-grid">
+                    <div class="faq-item">
+                        <h3><i class="fas fa-bolt"></i> Is it fast?</h3>
+                        <p>Yes! Our system is optimized to fetch and prepare your download link in seconds. No more waiting around.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3><i class="fas fa-film"></i> What quality can I download?</h3>
+                        <p>You can download clips in the highest resolution available, often up to 1080p at 60 frames per second.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3><i class="fas fa-mobile-alt"></i> Does this work on mobile?</h3>
+                        <p>Absolutely. Our website is fully responsive, and you can download clips directly to your phone or tablet.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3><i class="fas fa-shield-alt"></i> Is this safe and private?</h3>
+                        <p>Your privacy is important. We don't store your downloaded clips or the links you paste. The service is secure and anonymous.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer id="contact">
+        <p>© 2023 ClipMaster | Downloader service powered by Clipsey.com</p>
+        <p>Disclaimer: This tool is intended for personal use only. Please respect all content creators and copyright holders.</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.getElementById('navToggle');
+            const navLinks = document.getElementById('navLinks');
+            const clipseyFrame = document.getElementById('clipseyFrame');
+            const iframeContainer = document.querySelector('.iframe-container');
+            const loader = document.querySelector('.loader');
+
+            // --- Navbar Toggle for Mobile ---
+            navToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+
+            // --- Iframe Loader ---
+            clipseyFrame.addEventListener('load', function() {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 300);
+            });
+
+            // --- Iframe Scroll Activation Logic ---
+            const activateScrolling = () => {
+                if (document.activeElement === clipseyFrame) {
+                    clipseyFrame.scrolling = 'yes';
+                    
+                    const note = document.createElement('div');
+                    note.className = 'scroll-activated-note';
+                    note.textContent = '✅ Scrolling Unlocked';
+                    iframeContainer.appendChild(note);
+
+                    setTimeout(() => { note.style.opacity = '1'; }, 10);
+                    setTimeout(() => { 
+                        note.style.opacity = '0'; 
+                        setTimeout(() => note.remove(), 500);
+                    }, 3000);
+
+                    window.removeEventListener('blur', activateScrolling);
+                }
+            };
+            
+            window.addEventListener('blur', activateScrolling);
+        });
+    </script>
+</body>
+</html>
