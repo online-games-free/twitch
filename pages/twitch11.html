@@ -51,9 +51,11 @@
         }
 
 
-        /* =================================== */
-        /* === 2. MOBILE-FIRST STYLES     === */
-        /* =================================== */
+        /* =================================================================== */
+        /* =================================================================== */
+        /* === 2. MOBILE-FIRST STYLES (Screens < 769px wide)              === */
+        /* =================================================================== */
+        /* =================================================================== */
         /* These are the default styles, designed for small screens. */
         /* They will be overridden for larger screens in the media query below. */
 
@@ -74,7 +76,7 @@
             gap: 12px; 
             text-decoration: none; 
             color: var(--text-light);
-            z-index: 110; /* Must be higher than nav-links */
+            z-index: 110;
         }
         
         .nav-logo .logo-icon {
@@ -96,14 +98,13 @@
         }
         
         .nav-logo .logo-text { 
-            font-size: 1.5rem; /* Smaller text for mobile logo */
+            font-size: 1.5rem;
             font-weight: 700; 
             background: linear-gradient(90deg, var(--twitch-purple), #a970ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Mobile Menu Button is visible by default */
         .mobile-menu-btn {
             display: block;
             background: transparent;
@@ -111,14 +112,13 @@
             color: var(--text-light);
             font-size: 1.8rem;
             cursor: pointer;
-            z-index: 110; /* Must be higher than nav-links */
+            z-index: 110;
         }
         
-        /* Mobile navigation panel is hidden off-screen by default */
         .nav-links {
             position: fixed;
             top: 0;
-            right: -100%; /* Hidden off-screen */
+            right: -100%;
             width: 70%;
             height: 100vh;
             background: var(--card-bg);
@@ -133,13 +133,12 @@
             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
         }
         
-        /* The 'active' class slides the menu in */
         .nav-links.active {
             right: 0;
         }
         
         .nav-links a {
-            font-size: 1.3rem; /* Larger font for easier tapping */
+            font-size: 1.3rem;
             color: var(--text-light);
             text-decoration: none;
             font-weight: 500;
@@ -159,7 +158,7 @@
         }
         
         h1 {
-            font-size: 2.3rem; /* Smaller font for mobile heading */
+            font-size: 2.3rem;
             font-weight: 800;
             margin-bottom: 20px;
             line-height: 1.2;
@@ -169,7 +168,7 @@
         }
         
         .subtitle { 
-            font-size: 1.1rem; /* Smaller font for mobile subtitle */
+            font-size: 1.1rem;
             color: var(--text-gray); 
             margin: 0 auto 40px; 
             font-weight: 300;
@@ -183,10 +182,9 @@
             position: relative;
         }
         
-        /* On mobile, the form stacks vertically */
         #searchForm {
             display: flex; 
-            flex-direction: column; /* Stack input and button */
+            flex-direction: column;
             gap: 15px; 
             background: var(--card-bg); 
             border-radius: 15px;
@@ -208,7 +206,7 @@
             color: var(--text-light);
             font-size: 1.1rem; 
             padding: 15px; 
-            text-align: center; /* Center placeholder text on mobile */
+            text-align: center;
             outline: none;
         }
         
@@ -217,14 +215,14 @@
             color: white; 
             border: none; 
             border-radius: 10px;
-            padding: 15px; /* Consistent padding */
+            padding: 15px;
             font-size: 1.1rem; 
             font-weight: 600; 
             cursor: pointer; 
             transition: var(--transition);
             display: flex;
             align-items: center;
-            justify-content: center; /* Center icon and text */
+            justify-content: center;
             gap: 10px;
             box-shadow: 0 4px 15px rgba(145, 71, 255, 0.3);
         }
@@ -303,17 +301,20 @@
             transition: height 0.8s ease-in-out; 
             opacity: 0; transform: scale(0.95); 
             animation: fadeInGrow 0.6s 0.3s forwards;
-            height: 450px; /* Mobile height */
+            /* Height is now controlled by the JavaScript CONFIG object */
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
         
         @keyframes fadeInGrow { to { opacity: 1; transform: scale(1); } }
         
+        /* === MOBILE IFRAME STYLE === */
         #clipseyFrame { 
             width: 100%; height: 100%;
             border: none; display: block; 
-            margin-top: -170px; /* Hide header - mobile */
-            height: calc(100% + 170px); /* Mobile height adjustment */
+            /* Adjust this negative margin to hide the header of the embedded site on MOBILE */
+            margin-top: -190px;
+            /* This value MUST be updated if you change the margin-top above */
+            height: calc(100% + 170px);
         }
         
         /* --- Features & SEO Content Sections (Shared Styles) --- */
@@ -321,7 +322,7 @@
         
         .section-title { 
             text-align: center; 
-            font-size: 2rem; /* Smaller title for mobile */
+            font-size: 2rem;
             font-weight: 700; margin-bottom: 40px; 
             color: var(--text-light); position: relative;
         }
@@ -378,7 +379,7 @@
         .feature-card p { color: var(--text-gray); font-size: 1.05rem; line-height: 1.7; }
         
         .seo-content {
-            padding: 30px 20px; /* Less padding on mobile */
+            padding: 30px 20px;
             max-width: 900px; margin: 40px auto 0;
             background: rgba(24, 24, 27, 0.5);
             border-radius: 20px;
@@ -414,9 +415,11 @@
         .footer-links a:hover { color: var(--twitch-purple); }
 
 
-        /* ========================================= */
-        /* === 3. DESKTOP / PC STYLES (>= 769px) === */
-        /* ========================================= */
+        /* =================================================================== */
+        /* =================================================================== */
+        /* === 3. DESKTOP / PC STYLES (Screens >= 769px wide)             === */
+        /* =================================================================== */
+        /* =================================================================== */
         /* These styles ONLY apply to screens 769px or wider. */
         /* They override the mobile-first styles above. */
 
@@ -424,23 +427,23 @@
             
             /* --- Header & Navigation (Desktop) --- */
             .mobile-menu-btn {
-                display: none; /* Hide hamburger menu on desktop */
+                display: none;
             }
 
             .nav-links {
-                position: static; /* Reset from 'fixed' */
+                position: static;
                 right: auto;
                 width: auto;
                 height: auto;
                 background: transparent;
-                flex-direction: row; /* Align links horizontally */
+                flex-direction: row;
                 box-shadow: none;
                 z-index: 100;
             }
 
             .nav-links a {
-                font-size: 1rem; /* Reset font size for desktop */
-                padding: 5px 0; /* Reset padding */
+                font-size: 1rem;
+                padding: 5px 0;
             }
 
             .nav-links a:after {
@@ -459,61 +462,63 @@
             }
 
             .nav-logo .logo-text {
-                font-size: 1.8rem; /* Larger logo text on desktop */
+                font-size: 1.8rem;
             }
 
             /* --- Hero Section (Desktop) --- */
             .hero {
-                padding: 80px 20px 60px; /* More vertical padding */
+                padding: 80px 20px 60px;
             }
 
             h1 {
-                font-size: 3.5rem; /* Larger heading on desktop */
+                font-size: 3.5rem;
             }
 
             .subtitle {
-                font-size: 1.3rem; /* Larger subtitle on desktop */
+                font-size: 1.3rem;
             }
 
             /* --- Search Form (Desktop) --- */
             #searchForm {
-                flex-direction: row; /* Align input and button horizontally */
+                flex-direction: row;
                 padding: 15px;
             }
             
             #clipUrlInput {
                 padding: 0 15px;
-                text-align: left; /* Align text to the left */
+                text-align: left;
             }
             
             #searchButton {
-                padding: 15px 35px; /* Adjust padding for desktop button */
-                width: auto; /* Let the button size itself */
+                padding: 15px 35px;
+                width: auto;
             }
 
             /* --- Downloader & Iframe (Desktop) --- */
             .iframe-container {
-                height: 540px; /* Taller iframe for desktop */
+                /* Height is controlled by the JavaScript CONFIG object */
             }
-        
+            
+            /* === DESKTOP IFRAME STYLE === */
             #clipseyFrame { 
-                margin-top: -155px; /* Desktop header hiding */
-                height: calc(100% + 95px); /* Desktop height adjustment */
+                /* Adjust this negative margin to hide the header of the embedded site on DESKTOP */
+                margin-top: -155px;
+                /* This value MUST be updated if you change the margin-top above */
+                height: calc(100% + 155px);
             }
 
             /* --- Features Section (Desktop) --- */
             .features-grid {
-                /* Create a responsive grid for desktop */
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             }
 
             /* --- Content Sections (Desktop) --- */
             .section-title {
-                font-size: 2.5rem; /* Larger section titles */
+                font-size: 2.5rem;
             }
 
             .seo-content {
-                padding: 40px; /* More padding */
+                padding: 40px;
             }
 
             .seo-content h2 {
@@ -669,20 +674,26 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // ===================================================
-            // --- EDIT THESE VALUES TO CUSTOMIZE ---
+            // ===================================================
+            // ---  EDIT THESE VALUES TO CUSTOMIZE THE SITE  ---
+            // ===================================================
             // ===================================================
             const CONFIG = {
-                // Timers (in milliseconds, 1000ms = 1 second)
-                initialCountdownSeconds: 5,
-                heightChangeDelaySeconds: 10,
+                // === TIMERS (in seconds) ===
+                initialCountdownSeconds: 5,   // How long the "Preparing..." spinner shows.
+                heightChangeDelaySeconds: 10, // Delay before the iframe grows taller to show more content.
 
-                // Iframe Heights (as text, like '420px')
-                // These should match the heights set in the CSS
-                desktopInitialHeight: '540px',
-                desktopFinalHeight: '640px',
-                mobileInitialHeight: '535px',
-                mobileFinalHeight: '775px',
+                // === DESKTOP IFRAME SIZES (for screens > 768px wide) ===
+                // Use units like 'px', 'vh', etc.
+                desktopIframeInitialHeight: '540px', // Initial height when downloader first appears.
+                desktopIframeFinalHeight: '640px',   // Taller height after the delay.
+
+                // === MOBILE IFRAME SIZES (for screens <= 768px wide) ===
+                mobileIframeInitialHeight: '525px', // Initial height on smaller screens.
+                mobileIframeFinalHeight: '710px',   // Taller height after the delay.
             };
+            // ===================================================
+            // ---  END OF CUSTOMIZABLE VALUES  ---
             // ===================================================
 
             // Elements
@@ -769,14 +780,16 @@
                 // This logic determines if we are on a mobile-sized screen.
                 // The 768px value matches the CSS media query breakpoint.
                 const isMobile = window.innerWidth <= 768;
-                iframeContainer.style.height = isMobile ? CONFIG.mobileInitialHeight : CONFIG.desktopInitialHeight;
+                
+                // Set the INITIAL height based on the device type from the CONFIG
+                iframeContainer.style.height = isMobile ? CONFIG.mobileIframeInitialHeight : CONFIG.desktopIframeInitialHeight;
 
 
-                // Set a timer to change to the FINAL height
+                // Set a timer to change to the FINAL height after a delay
                 if (heightTimer) clearTimeout(heightTimer);
                 heightTimer = setTimeout(() => {
                     const isMobileNow = window.innerWidth <= 768;
-                    iframeContainer.style.height = isMobileNow ? CONFIG.mobileFinalHeight : CONFIG.desktopFinalHeight;
+                    iframeContainer.style.height = isMobileNow ? CONFIG.mobileIframeFinalHeight : CONFIG.desktopIframeFinalHeight;
                 }, CONFIG.heightChangeDelaySeconds * 1000);
             }
 
@@ -792,10 +805,9 @@
                     clipseyFrame.src = 'about:blank';
                     downloaderInstruction.style.display = 'none';
                     
-                    // Reset iframe height to initial value (no need to check width, CSS handles it)
-                    iframeContainer.style.height = ''; // This will reset it to the value in the CSS
+                    // Reset iframe height so it can be set again on the next run
+                    iframeContainer.style.height = '0px'; 
                     
-                    // Scroll to top
                     window.scrollTo({
                         top: 0,
                         behavior: 'smooth'
